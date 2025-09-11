@@ -1,8 +1,10 @@
+import React from 'react';
 import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import * as Location from 'expo-location';
 import { Magnetometer, DeviceMotion } from 'expo-sensors';
+import Ubication, { useUbication } from '@/hooks/useUbication';
 
 
 const { width, height } = Dimensions.get('window');
@@ -11,6 +13,7 @@ export default function index() {
   const [ubiPerm, setUbiPer] = useState(false);
   const [openCamera, setCamera] = useState();
   const [errMsg, setMsg] = useState('');
+  const [conditions, setCondition] = useState({ ubi: false, nort: false, degree: false });
 
   // Uni
   const [location, setLocation] = useState<any>();
@@ -20,26 +23,12 @@ export default function index() {
   // Angulo del celular
   const [angRotation, setRotation] = useState({ pitch: 0, roll: 0, yaw: 0 });
 
+  const setUbiCondition = (confirmUbication: boolean) => {
+    setCondition(prev => ({ ...prev, ubi: confirmUbication }));
+  }
   // Ubicacion
   useEffect(() => {
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setMsg("Error, permiso no otorgad");
-        return;
-      }
-      setUbiPer(true)
-
-      const ubiSubscription = await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.High,
-          timeInterval: 0,
-          distanceInterval: 0,
-        },
-        (loc) => {
-          setLocation(loc.coords);
-        })
-
       // Brujula
       const bruSub = Magnetometer.addListener((magData) => {
         setBuData(magData);
@@ -48,10 +37,17 @@ export default function index() {
         // De radianes a grados
         let angle = Math.atan2(y, x) * (180 / Math.PI);
         if (angle < 0) angle += 360;
+        angle = parseFloat(angle.toFixed(2));
         setAngle(angle);
+
+        if (angle <= 1.9) {
+          setCondition(prev => ({ ...prev, nort: true }))
+        } else {
+          setCondition(prev => ({ ...prev, nort: false }))
+        }
       })
 
-      Magnetometer.setUpdateInterval(1000)
+      Magnetometer.setUpdateInterval(500)
 
       // Angulo
       const angSub = DeviceMotion.addListener((motion) => {
@@ -70,7 +66,7 @@ export default function index() {
       })
 
       DeviceMotion.setUpdateInterval(500);
-      return () => { ubiSubscription.remove(); bruSub.remove(), angSub.remove() };
+      return () => { bruSub.remove(), angSub.remove() };
     })();
   }, [])
 
@@ -78,23 +74,11 @@ export default function index() {
     <SafeAreaView style={{ flex: 1 }}>
       <Text style={{ display: errMsg ? 'flex' : 'none' }}>{errMsg}</Text>
 
-      <View style={styles.condition}>
-        <Text style={styles.title}>Ubicacion</Text>
-        {location && (
-          <>
-            <Text>Latitud : {location.latitude}</Text>
-            <Text>Longitud : {location.longitude}</Text>
-          </>
-        )}
-      </View>
-      <View style={styles.condition}>
-        <Text style={styles.title}>Norte</Text>
-        {buData && (
-          <>
-            <Text>Angulo {buAngle}</Text>
-          </>
-        )}
-      </View>
+      <Ubication conditions={conditions} setCondition={setUbiCondition}/>
+
+      
+
+
       <View style={styles.condition}>
         <Text style={styles.title}>Angulo</Text>
         {angRotation && (
@@ -109,7 +93,7 @@ export default function index() {
   )
 }
 
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
   condition: {
     width: width * .9,
     marginHorizontal: 'auto',
@@ -117,5 +101,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32
+  },
+  subTitle: {
+    fontSize: 20
   }
 })

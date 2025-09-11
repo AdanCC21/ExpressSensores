@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
-import { View } from 'react-native';
+import React from 'react';
 
 export default function RootLayout() {
 
