@@ -5,7 +5,7 @@ import * as Location from 'expo-location';
 
 type Props = {
     conditions: any
-    setCondition: (confirm: boolean) => void
+    setCondition: (confirm: boolean, type:string) => void
 }
 
 
@@ -29,10 +29,9 @@ export default function Ubication({ conditions, setCondition }: Props) {
                 },
                 (loc) => {
                     setLocation(loc.coords);
-                    console.log('Coordenadas cambiando:', loc.coords);
 
                     const insideRang = useUbication(loc.coords);
-                    setCondition(insideRang);
+                    setCondition(insideRang,"ubi");
                 }
             );
         })();

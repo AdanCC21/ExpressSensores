@@ -1,93 +1,47 @@
 import React from 'react';
-import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native'
+import { useState } from 'react';
+import { View, Text, StyleSheet, Dimensions, Pressable } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import * as Location from 'expo-location';
-import { Magnetometer, DeviceMotion } from 'expo-sensors';
+
 import Ubication, { useUbication } from '@/hooks/useUbication';
+import Compass from '@/hooks/useNort';
+import Degree from '@/hooks/useDegree';
 
 
 const { width, height } = Dimensions.get('window');
 
 export default function index() {
-  const [ubiPerm, setUbiPer] = useState(false);
   const [openCamera, setCamera] = useState();
   const [errMsg, setMsg] = useState('');
   const [conditions, setCondition] = useState({ ubi: false, nort: false, degree: false });
 
-  // Uni
-  const [location, setLocation] = useState<any>();
-  // Norte
-  const [buData, setBuData] = useState({ x: 0, y: 0, z: 0 })
-  const [buAngle, setAngle] = useState(0);
-  // Angulo del celular
-  const [angRotation, setRotation] = useState({ pitch: 0, roll: 0, yaw: 0 });
-
-  const setUbiCondition = (confirmUbication: boolean) => {
-    setCondition(prev => ({ ...prev, ubi: confirmUbication }));
+  const updateCondition = (confirmUbication: boolean, type: string) => {
+    setCondition(prev => ({ ...prev, [type]: confirmUbication }));
   }
-  // Ubicacion
-  useEffect(() => {
-    (async () => {
-      // Brujula
-      const bruSub = Magnetometer.addListener((magData) => {
-        setBuData(magData);
 
-        const { x, y } = magData;
-        // De radianes a grados
-        let angle = Math.atan2(y, x) * (180 / Math.PI);
-        if (angle < 0) angle += 360;
-        angle = parseFloat(angle.toFixed(2));
-        setAngle(angle);
-
-        if (angle <= 1.9) {
-          setCondition(prev => ({ ...prev, nort: true }))
-        } else {
-          setCondition(prev => ({ ...prev, nort: false }))
-        }
-      })
-
-      Magnetometer.setUpdateInterval(500)
-
-      // Angulo
-      const angSub = DeviceMotion.addListener((motion) => {
-        if (motion.rotation) {
-          // Rotacion : {alpha, beta, gammes} en radianes
-          const { beta, gamma, alpha } = motion.rotation;
-          // Beta : inclinacion hacia adelante (pitch), gamma lateral (roll), alpha giro alrededor del eje vertical (yall)
-
-          // Convertir a grados
-          setRotation({
-            pitch: beta * (180 / Math.PI),
-            roll: gamma * (180 / Math.PI),
-            yaw: alpha * (180 / Math.PI)
-          })
-        }
-      })
-
-      DeviceMotion.setUpdateInterval(500);
-      return () => { bruSub.remove(), angSub.remove() };
-    })();
-  }, [])
+  const confirmCondition = () => {
+    return conditions.degree && conditions.ubi && conditions.degree
+  }
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <Text style={{ display: errMsg ? 'flex' : 'none' }}>{errMsg}</Text>
 
-      <Ubication conditions={conditions} setCondition={setUbiCondition}/>
+      <Ubication conditions={conditions} setCondition={updateCondition} />
 
-      
+      <Compass conditions={conditions} setCondition={updateCondition} />
 
+      <Degree condition={conditions} setCondition={updateCondition} />
 
-      <View style={styles.condition}>
-        <Text style={styles.title}>Angulo</Text>
-        {angRotation && (
-          <>
-            <Text>y : {angRotation.pitch}</Text>
-            <Text>x : {angRotation.roll}</Text>
-            <Text>rotacion : {angRotation.yaw}</Text>
-          </>
-        )}
+      <View>
+        <Text>Tienes que cumplor los 3 para poder abrir la camara</Text>
+        <Pressable
+          style={{
+            backgroundColor: confirmCondition() ? '#ffffff' : "#000000"
+          }}
+          onPress={() => { console.log("Abrir camara") }}>
+          <Text>Abrir camara</Text>
+        </Pressable>
       </View>
     </SafeAreaView>
   )
