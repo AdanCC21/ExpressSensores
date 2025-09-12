@@ -1,7 +1,7 @@
 import { DeviceMotion } from "expo-sensors";
 import React, { useEffect, useState } from "react";
 import { View, Text } from "react-native";
-import { styles } from '../app/index'
+import { styles } from '../constants/styles'
 
 type Prompts = {
     condition: any,
@@ -38,20 +38,21 @@ export default function Degree({ condition, setCondition }: Prompts) {
     })
 
     return (
-        <View style={styles.condition}>
-            <Text style={styles.title}>Angulo</Text>
+        <View style={styles.card}>
+            <Text style={styles.title}>Ángulo</Text>
             {currentDegree && (
                 <>
-                    <Text>y : {currentDegree.pitch}</Text>
-                    <Text>x : {currentDegree.roll}</Text>
-                    <Text>rotacion : {currentDegree.yaw}</Text>
+                    <Text style={styles.text}>Y (pitch): {currentDegree.pitch}</Text>
+                    <Text style={styles.text}>X (roll): {currentDegree.roll}</Text>
+                    <Text style={styles.text}>Rotación (yaw): {currentDegree.yaw}</Text>
                 </>
             )}
-            <Text style={styles.subTitle}>Condicion</Text>
-            <Text>entre 0 y 3 grados Y</Text>
-            <Text>
-                {condition.degree ? 'Se cumple' : 'No se cumple'}
+            <Text style={styles.subTitle}>Condición</Text>
+            <Text style={styles.text}>Entre 0 y 3 grados Y</Text>
+            <Text style={[styles.statusBadge, condition.degree ? styles.statusOk : styles.statusFail]}>
+                {condition.degree ? "Se cumple" : "No se cumple"}
             </Text>
         </View>
+
     )
 }

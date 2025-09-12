@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { styles } from '../app/index'
+import { styles } from '../constants/styles'
 import * as Location from 'expo-location';
 
 type Props = {
     conditions: any
-    setCondition: (confirm: boolean, type:string) => void
+    setCondition: (confirm: boolean, type: string) => void
 }
 
 
@@ -31,7 +31,7 @@ export default function Ubication({ conditions, setCondition }: Props) {
                     setLocation(loc.coords);
 
                     const insideRang = useUbication(loc.coords);
-                    setCondition(insideRang,"ubi");
+                    setCondition(insideRang, "ubi");
                 }
             );
         })();
@@ -44,30 +44,34 @@ export default function Ubication({ conditions, setCondition }: Props) {
     }, []);
 
     return (
-        <View style={styles.condition}>
-            <Text style={styles.title}>Ubicacion</Text>
+        <View style={styles.card}>
+            <Text style={styles.title}>Ubicación</Text>
             {location && (
                 <>
-                    <Text>Latitud : {location.latitude}</Text>
-                    <Text>Longitud : {location.longitude}</Text>
+                    <Text style={styles.text}>Latitud: {location.latitude}</Text>
+                    <Text style={styles.text}>Longitud: {location.longitude}</Text>
                 </>
             )}
             <View style={{ marginVertical: 10 }}>
-                <Text style={styles.subTitle}>Condicion</Text>
-                <Text>Latitud : 31.8650923</Text>
-                <Text>Longitud : -116.6657887</Text>
+                <Text style={styles.subTitle}>Condición</Text>
+                <Text style={styles.text}>Latitud : 31.8650923</Text>
+                <Text style={styles.text}>Longitud : -116.6657887</Text>
             </View>
-
-            <Text>{conditions.ubi ? 'Listo' : 'Fuera de rango'}</Text>
+            <Text style={[styles.statusBadge, conditions.ubi ? styles.statusOk : styles.statusFail]}>
+                {conditions.ubi ? "Listo" : "Fuera de rango"}
+            </Text>
         </View>
+
     )
 }
 
 export function useUbication(location: any) {
     console.log(location);
-    let distance = getDistanceFromLatLonInM(location.latitude, location.longitude, 31.8650923, -116.6657887);
+    let distance = getDistanceFromLatLonInM(location.latitude, location.longitude, 31.8453905, -116.5710743);
     return distance <= 50 ? true : false
 }
+
+
 
 function getDistanceFromLatLonInM(lat1: any, lon1: any, lat2: any, lon2: any) {
     const R = 6371e3; // Radio de la tierra en metros
